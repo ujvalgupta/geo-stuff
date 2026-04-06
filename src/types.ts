@@ -1,6 +1,14 @@
 export type CheckStatus = "PASS" | "FAIL" | "WARNING";
 export type CrawlabilityClassification = "Excellent" | "Good" | "Risky" | "Broken";
 
+export interface ScoreBreakdown {
+  fetchability: number;
+  botAccess: number;
+  rendering: number;
+  parsing: number;
+  contentQuality: number;
+}
+
 export interface CheckResult {
   status: CheckStatus;
   reason: string;
@@ -45,13 +53,7 @@ export interface CrawlabilityReport {
   score: number;
   overallStatus: CheckStatus;
   classification: CrawlabilityClassification;
-  breakdown: {
-    fetchability: number;
-    botAccess: number;
-    rendering: number;
-    parsing: number;
-    contentQuality: number;
-  };
+  breakdown: ScoreBreakdown;
   checks: {
     fetchability: CheckResult;
     robotsTxt: CheckResult;

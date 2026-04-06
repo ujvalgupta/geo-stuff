@@ -2,6 +2,7 @@ import type {
   CheckResult,
   CheckStatus,
   CrawlabilityClassification,
+  ScoreBreakdown,
 } from "./types.ts";
 
 const STATUS_TO_SCORE: Record<CheckStatus, number> = {
@@ -34,8 +35,8 @@ export function calculateScore(results: {
   javascriptRendering: CheckResult;
   htmlParsability: CheckResult;
   contentExtraction: CheckResult;
-}): { score: number; breakdown: Record<string, number> } {
-  const normalizedBreakdown = {
+}): { score: number; breakdown: ScoreBreakdown } {
+  const normalizedBreakdown: ScoreBreakdown = {
     fetchability: getNormalizedScore(results.fetchability),
     botAccess:
       (getNormalizedScore(results.robotsTxt) +
