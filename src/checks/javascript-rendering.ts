@@ -1,5 +1,5 @@
-import type { CheckContext, CheckResult } from "../types.ts";
-import { compareRawAndRenderedPage } from "../utils/rendering.ts";
+import type { CheckContext, CheckResult } from "../types.js";
+import { compareRawAndRenderedPage } from "../utils/rendering.js";
 
 function countMatches(input: string, regex: RegExp): number {
   return input.match(regex)?.length ?? 0;

@@ -1,6 +1,6 @@
-import type { CheckContext, CheckResult } from "../types.ts";
-import { fetchText } from "../utils/http.ts";
-import { dnsLookup, tlsHandshake } from "../utils/network.ts";
+import type { CheckContext, CheckResult } from "../types.js";
+import { fetchText } from "../utils/http.js";
+import { dnsLookup, tlsHandshake } from "../utils/network.js";
 
 const SLOW_RESPONSE_THRESHOLD_MS = 3000;
 

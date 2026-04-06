@@ -1,6 +1,6 @@
-import type { CheckContext, CheckResult } from "../types.ts";
-import { fetchText, getOriginRobotsUrl } from "../utils/http.ts";
-import { evaluateRobotsAccess } from "../utils/robots.ts";
+import type { CheckContext, CheckResult } from "../types.js";
+import { fetchText, getOriginRobotsUrl } from "../utils/http.js";
+import { evaluateRobotsAccess } from "../utils/robots.js";
 
 const TARGET_BOTS = ["GPTBot", "Googlebot", "PerplexityBot"];
 

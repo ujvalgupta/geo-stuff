@@ -1,4 +1,4 @@
-import type { CrawlabilityReport } from "./types.ts";
+import type { CrawlabilityReport } from "./types.js";
 
 export function formatSummary(report: CrawlabilityReport): string {
   const lines = [

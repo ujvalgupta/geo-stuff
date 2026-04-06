@@ -2,7 +2,7 @@ import express from "express";
 import type { Request, Response } from "express";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { runCrawlabilityCheck } from "./orchestrator.ts";
+import { runCrawlabilityCheck } from "./orchestrator.js";
 
 const DEFAULT_PORT = 3000;
 const DEFAULT_TIMEOUT_MS = 30000;

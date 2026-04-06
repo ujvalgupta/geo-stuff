@@ -3,7 +3,7 @@ import type {
   CheckStatus,
   CrawlabilityClassification,
   ScoreBreakdown,
-} from "./types.ts";
+} from "./types.js";
 
 const STATUS_TO_SCORE: Record<CheckStatus, number> = {
   PASS: 1,

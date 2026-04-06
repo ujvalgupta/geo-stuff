@@ -1,4 +1,4 @@
-import type { PageSnapshot } from "../types.ts";
+import type { PageSnapshot } from "../types.js";
 
 export async function fetchText(
   url: string,

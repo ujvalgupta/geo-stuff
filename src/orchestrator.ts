@@ -1,12 +1,12 @@
-import { runBotAccessSimulationCheck } from "./checks/bot-access-simulation.ts";
-import { runContentExtractionCheck } from "./checks/content-extraction.ts";
-import { runFetchabilityCheck } from "./checks/fetchability.ts";
-import { runHtmlParsabilityCheck } from "./checks/html-parsability.ts";
-import { runJavascriptRenderingCheck } from "./checks/javascript-rendering.ts";
-import { runRobotsTxtCheck } from "./checks/robots-txt.ts";
-import { formatSummary } from "./reporting.ts";
-import { calculateScore, classifyScore, inferOverallStatus } from "./scoring.ts";
-import type { CheckContext, CrawlabilityReport } from "./types.ts";
+import { runBotAccessSimulationCheck } from "./checks/bot-access-simulation.js";
+import { runContentExtractionCheck } from "./checks/content-extraction.js";
+import { runFetchabilityCheck } from "./checks/fetchability.js";
+import { runHtmlParsabilityCheck } from "./checks/html-parsability.js";
+import { runJavascriptRenderingCheck } from "./checks/javascript-rendering.js";
+import { runRobotsTxtCheck } from "./checks/robots-txt.js";
+import { formatSummary } from "./reporting.js";
+import { calculateScore, classifyScore, inferOverallStatus } from "./scoring.js";
+import type { CheckContext, CrawlabilityReport } from "./types.js";
 
 export async function runCrawlabilityCheck(inputUrl: string): Promise<CrawlabilityReport> {
   const normalizedUrl = new URL(inputUrl);

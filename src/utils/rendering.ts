@@ -1,4 +1,4 @@
-import { stripTags } from "./text.ts";
+import { stripTags } from "./text.js";
 
 export interface RenderComparison {
   rawTextLength: number;

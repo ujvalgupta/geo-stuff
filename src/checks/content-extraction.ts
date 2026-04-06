@@ -1,11 +1,11 @@
-import type { CheckContext, CheckResult } from "../types.ts";
+import type { CheckContext, CheckResult } from "../types.js";
 import {
   clip,
   extractPreferredContent,
   stripBoilerplate,
   stripTags,
   wordCount,
-} from "../utils/text.ts";
+} from "../utils/text.js";
 
 function countBlockElements(html: string): number {
   return html.match(/<(p|div|section|article|main|li|blockquote)\b/gi)?.length ?? 0;

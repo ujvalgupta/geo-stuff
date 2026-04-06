@@ -1,4 +1,4 @@
-import { runCrawlabilityCheck } from "./orchestrator.ts";
+import { runCrawlabilityCheck } from "./orchestrator.js";
 
 function printUsage(): void {
   console.error("Usage: npm run start:cli -- <url> [--json]");

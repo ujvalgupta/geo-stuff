@@ -1,4 +1,4 @@
-import type { CheckContext, CheckResult } from "../types.ts";
+import type { CheckContext, CheckResult } from "../types.js";
 
 export async function runHtmlParsabilityCheck(
   context: CheckContext,
