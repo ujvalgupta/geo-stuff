@@ -58,3 +58,4 @@ Each check returns:
 
 - The app serves a basic built-in UI from `public/`.
 - The project runs with `node --experimental-strip-types`.
+- `vercel.json` installs only production dependencies during Vercel deploys, so Jest-related deprecation warnings from dev tooling do not affect deployment.
