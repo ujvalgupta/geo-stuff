@@ -94,8 +94,9 @@ export function createServer(): express.Express {
   return app;
 }
 
+const app = createServer();
+
 async function main(): Promise<void> {
-  const app = createServer();
   const port = Number(process.env.PORT ?? DEFAULT_PORT);
 
   await new Promise<void>((resolve) => {
@@ -105,6 +106,8 @@ async function main(): Promise<void> {
     });
   });
 }
+
+export default app;
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   await main();
