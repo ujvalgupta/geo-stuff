@@ -17,16 +17,19 @@
         <div class="eyebrow"><span class="eyebrow-dot"></span>GEO &amp; AI Crawlability Audit</div>
         <h1>Can AI engines find, parse &amp; cite your page?</h1>
         <p class="lede">
-          GEO goes beyond traditional SEO. Analyze structured data, bot access,
-          canonical signals, content freshness, and rendering — across 7 AI crawlers.
+          16 checks across 7 GEO categories — structured data, E-E-A-T, bot access,
+          Core Web Vitals, crawl signals, content quality, and site-wide health.
         </p>
         <div class="hero-tags">
           <span class="hero-tag">Schema.org</span>
+          <span class="hero-tag">E-E-A-T</span>
           <span class="hero-tag">7 AI Bots</span>
+          <span class="hero-tag">llms.txt</span>
+          <span class="hero-tag">Core Web Vitals</span>
+          <span class="hero-tag">Link Depth</span>
           <span class="hero-tag">Canonical</span>
-          <span class="hero-tag">Meta Robots</span>
-          <span class="hero-tag">Sitemap</span>
-          <span class="hero-tag">Freshness</span>
+          <span class="hero-tag">Sitemap Quality</span>
+          <span class="hero-tag">Site Health</span>
         </div>
       </section>
 
@@ -56,7 +59,7 @@
           <div class="loading-ring"></div>
           <div class="loading-text-wrap">
             <p class="loading-step" id="loading-step">Fetching page…</p>
-            <p class="loading-sub">Running 11 checks across 6 GEO categories</p>
+            <p class="loading-sub">Running 16 checks across 7 GEO categories</p>
           </div>
         </div>
         <div class="loading-checks">
@@ -64,9 +67,11 @@
           <span class="lc-item" id="lc-bots">Bot Access</span>
           <span class="lc-item" id="lc-crawl">Crawl Signals</span>
           <span class="lc-item" id="lc-schema">Structured Data</span>
-          <span class="lc-item" id="lc-render">JS Rendering</span>
-          <span class="lc-item" id="lc-content">Content Quality</span>
+          <span class="lc-item" id="lc-render">Rendering</span>
+          <span class="lc-item" id="lc-content">Content</span>
+          <span class="lc-item" id="lc-site">Site Health</span>
         </div>
+        <div class="loading-log" id="loading-log"></div>
       </section>
 
       <section id="status-panel" class="panel status-panel hidden">
@@ -102,29 +107,34 @@
           <h2>Module breakdown</h2>
           <p class="panel-sub">Click any card to see details</p>
         </div>
+
         <div class="category-group">
-          <h3 class="category-label">Fetchability <span class="cat-weight">12%</span></h3>
+          <h3 class="category-label">Fetchability <span class="cat-weight">10%</span></h3>
           <div class="checks-grid" id="grid-fetchability"></div>
         </div>
         <div class="category-group">
-          <h3 class="category-label">Bot Access <span class="cat-weight">18%</span></h3>
+          <h3 class="category-label">Bot Access <span class="cat-weight">15%</span></h3>
           <div class="checks-grid" id="grid-botaccess"></div>
         </div>
         <div class="category-group">
-          <h3 class="category-label">Crawl Signals <span class="cat-weight">20%</span></h3>
+          <h3 class="category-label">Crawl Signals <span class="cat-weight">18%</span></h3>
           <div class="checks-grid" id="grid-crawlsignals"></div>
         </div>
         <div class="category-group">
-          <h3 class="category-label">Structured Data <span class="cat-weight">25%</span></h3>
+          <h3 class="category-label">Structured Data &amp; Authority <span class="cat-weight">20%</span></h3>
           <div class="checks-grid" id="grid-structureddata"></div>
         </div>
         <div class="category-group">
-          <h3 class="category-label">JS Rendering <span class="cat-weight">12%</span></h3>
+          <h3 class="category-label">Rendering &amp; Performance <span class="cat-weight">10%</span></h3>
           <div class="checks-grid" id="grid-rendering"></div>
         </div>
         <div class="category-group">
-          <h3 class="category-label">Content Quality <span class="cat-weight">13%</span></h3>
+          <h3 class="category-label">Content Quality <span class="cat-weight">15%</span></h3>
           <div class="checks-grid" id="grid-content"></div>
+        </div>
+        <div class="category-group">
+          <h3 class="category-label">Site Health <span class="cat-weight">12%</span></h3>
+          <div class="checks-grid" id="grid-sitehealth"></div>
         </div>
       </section>
 

@@ -5,7 +5,28 @@ export interface RobotsEvaluation {
 
 interface Rule {
   pattern: string;
+  regex: RegExp;
   allow: boolean;
+  specificity: number; // length of original pattern for tie-breaking
+}
+
+/**
+ * Converts a robots.txt path pattern to a RegExp.
+ * Implements the Google robots.txt spec:
+ *   - '*' matches any sequence of characters (including empty)
+ *   - '$' at the end of a pattern anchors it to the end of the URL
+ */
+function patternToRegex(pattern: string): RegExp {
+  const hasEndAnchor = pattern.endsWith("$");
+  const base = hasEndAnchor ? pattern.slice(0, -1) : pattern;
+
+  // Escape all regex metacharacters except * (which we handle ourselves)
+  const escaped = base.replace(/[.+^{}()|[\]\\?]/g, "\\$&");
+
+  // Convert robots.txt wildcard * to regex .*
+  const withWildcard = escaped.replace(/\*/g, ".*");
+
+  return new RegExp("^" + withWildcard + (hasEndAnchor ? "$" : ""));
 }
 
 export function parseRobotsForUserAgent(
@@ -13,37 +34,52 @@ export function parseRobotsForUserAgent(
   requestedUserAgent: string,
 ): Rule[] {
   const lines = content.split(/\r?\n/);
-  const rules: Rule[] = [];
-  let applies = false;
+  const specificRules: Rule[] = [];
+  const wildcardRules: Rule[] = [];
+
+  let inSpecificSection = false;
+  let inWildcardSection = false;
 
   for (const rawLine of lines) {
     const line = rawLine.replace(/#.*$/, "").trim();
-    if (!line) continue;
+    if (!line) {
+      // blank line ends a group — reset for next group
+      continue;
+    }
 
-    const separatorIndex = line.indexOf(":");
-    if (separatorIndex === -1) continue;
+    const colonIdx = line.indexOf(":");
+    if (colonIdx === -1) continue;
 
-    const key = line.slice(0, separatorIndex).trim().toLowerCase();
-    const value = line.slice(separatorIndex + 1).trim();
+    const key = line.slice(0, colonIdx).trim().toLowerCase();
+    const value = line.slice(colonIdx + 1).trim();
     if (!value) continue;
 
     if (key === "user-agent") {
       const normalized = value.toLowerCase();
-      applies =
-        normalized === "*" ||
-        requestedUserAgent.toLowerCase().includes(normalized) ||
-        normalized.includes(requestedUserAgent.toLowerCase());
+      const botNormalized = requestedUserAgent.toLowerCase();
+      inSpecificSection =
+        normalized !== "*" &&
+        (botNormalized.includes(normalized) || normalized.includes(botNormalized));
+      inWildcardSection = normalized === "*";
       continue;
     }
 
-    if (!applies) continue;
+    if (key !== "allow" && key !== "disallow") continue;
+    if (!value || value === "") continue;
 
-    if (key === "allow" || key === "disallow") {
-      rules.push({ pattern: value, allow: key === "allow" });
-    }
+    const rule: Rule = {
+      pattern: value,
+      regex: patternToRegex(value),
+      allow: key === "allow",
+      specificity: value.length,
+    };
+
+    if (inSpecificSection) specificRules.push(rule);
+    if (inWildcardSection) wildcardRules.push(rule);
   }
 
-  return rules;
+  // Specific user-agent rules take precedence over wildcard rules
+  return specificRules.length > 0 ? specificRules : wildcardRules;
 }
 
 export function evaluateRobotsAccess(
@@ -52,13 +88,20 @@ export function evaluateRobotsAccess(
   path: string,
 ): RobotsEvaluation {
   const rules = parseRobotsForUserAgent(content, requestedUserAgent).filter(
-    (rule) => rule.pattern !== "",
+    (r) => r.pattern !== "",
   );
 
+  // Find the most specific (longest) matching rule.
+  // If two rules have equal specificity, Allow takes precedence (Google spec).
   let bestMatch: Rule | undefined;
+
   for (const rule of rules) {
-    if (path.startsWith(rule.pattern)) {
-      if (!bestMatch || rule.pattern.length > bestMatch.pattern.length) {
+    if (rule.regex.test(path)) {
+      if (
+        !bestMatch ||
+        rule.specificity > bestMatch.specificity ||
+        (rule.specificity === bestMatch.specificity && rule.allow && !bestMatch.allow)
+      ) {
         bestMatch = rule;
       }
     }

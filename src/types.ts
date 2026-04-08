@@ -8,6 +8,7 @@ export interface ScoreBreakdown {
   structuredData: number;
   rendering: number;
   contentQuality: number;
+  siteHealth: number;
 }
 
 export interface CheckResult {
@@ -61,17 +62,29 @@ export interface CrawlabilityReport {
   classification: CrawlabilityClassification;
   breakdown: ScoreBreakdown;
   checks: {
+    // Fetchability
     fetchability: CheckResult;
+    // Bot Access
     robotsTxt: CheckResult;
     botAccessSimulation: CheckResult;
+    llmsTxt: CheckResult;
+    // Crawl Signals
     metaRobots: CheckResult;
     canonical: CheckResult;
     sitemap: CheckResult;
+    internalLinkDepth: CheckResult;
+    // Structured Data & Authority
     structuredData: CheckResult;
+    eeatSignals: CheckResult;
+    // Rendering & Performance
     javascriptRendering: CheckResult;
+    coreWebVitals: CheckResult;
+    // Content Quality
     contentExtraction: CheckResult;
     openGraph: CheckResult;
     contentFreshness: CheckResult;
+    // Site Health
+    multiPageSample: CheckResult;
   };
   summary: string;
 }

@@ -6,12 +6,13 @@ import type {
 } from "./types.js";
 
 const CATEGORY_WEIGHTS = {
-  fetchability: 12,
-  botAccess: 18,
-  crawlSignals: 20,
-  structuredData: 25,
-  rendering: 12,
-  contentQuality: 13,
+  fetchability:   10,
+  botAccess:      15,
+  crawlSignals:   18,
+  structuredData: 20,
+  rendering:      10,
+  contentQuality: 15,
+  siteHealth:     12,
 } as const;
 
 function getNormalizedScore(result: CheckResult): number {
@@ -21,51 +22,69 @@ function getNormalizedScore(result: CheckResult): number {
   return map[result.status] ?? 0;
 }
 
+function avg(...scores: number[]): number {
+  return scores.reduce((a, b) => a + b, 0) / scores.length;
+}
+
 export function calculateScore(results: {
   fetchability: CheckResult;
   robotsTxt: CheckResult;
   botAccessSimulation: CheckResult;
+  llmsTxt: CheckResult;
   metaRobots: CheckResult;
   canonical: CheckResult;
   sitemap: CheckResult;
+  internalLinkDepth: CheckResult;
   structuredData: CheckResult;
+  eeatSignals: CheckResult;
   javascriptRendering: CheckResult;
+  coreWebVitals: CheckResult;
   contentExtraction: CheckResult;
   openGraph: CheckResult;
   contentFreshness: CheckResult;
+  multiPageSample: CheckResult;
 }): { score: number; breakdown: ScoreBreakdown } {
+  const s = (k: keyof typeof results) => getNormalizedScore(results[k]);
+
   const breakdown: ScoreBreakdown = {
-    // Fetchability — single check
-    fetchability: getNormalizedScore(results.fetchability),
+    // Single check
+    fetchability: s("fetchability"),
 
-    // Bot Access — average of robots.txt + bot simulation
-    botAccess:
-      (getNormalizedScore(results.robotsTxt) +
-        getNormalizedScore(results.botAccessSimulation)) /
-      2,
+    // robots.txt 40% + bot simulation 40% + llms.txt 20%
+    botAccess: avg(s("robotsTxt"), s("robotsTxt"), s("botAccessSimulation"), s("botAccessSimulation"), s("llmsTxt")) ,
 
-    // Crawl Signals — average of meta robots + canonical + sitemap
-    crawlSignals:
-      (getNormalizedScore(results.metaRobots) +
-        getNormalizedScore(results.canonical) +
-        getNormalizedScore(results.sitemap)) /
-      3,
+    // meta robots 25% + canonical 30% + sitemap 25% + link depth 20%
+    crawlSignals: (
+      s("metaRobots") * 0.25 +
+      s("canonical") * 0.30 +
+      s("sitemap") * 0.25 +
+      s("internalLinkDepth") * 0.20
+    ),
 
-    // Structured Data — single check, highest weight
-    structuredData: getNormalizedScore(results.structuredData),
+    // JSON-LD 60% + E-E-A-T 40%
+    structuredData: (
+      s("structuredData") * 0.60 +
+      s("eeatSignals") * 0.40
+    ),
 
-    // Rendering — single check
-    rendering: getNormalizedScore(results.javascriptRendering),
+    // JS rendering 55% + CWV 45%
+    rendering: (
+      s("javascriptRendering") * 0.55 +
+      s("coreWebVitals") * 0.45
+    ),
 
-    // Content Quality — average of extraction + open graph + freshness
-    contentQuality:
-      (getNormalizedScore(results.contentExtraction) +
-        getNormalizedScore(results.openGraph) +
-        getNormalizedScore(results.contentFreshness)) /
-      3,
+    // content extraction 35% + open graph 30% + freshness 35%
+    contentQuality: (
+      s("contentExtraction") * 0.35 +
+      s("openGraph") * 0.30 +
+      s("contentFreshness") * 0.35
+    ),
+
+    // single check
+    siteHealth: s("multiPageSample"),
   };
 
-  const totalWeight = Object.values(CATEGORY_WEIGHTS).reduce((s, w) => s + w, 0);
+  const totalWeight = Object.values(CATEGORY_WEIGHTS).reduce((a, b) => a + b, 0);
   const weighted = (Object.keys(CATEGORY_WEIGHTS) as Array<keyof typeof CATEGORY_WEIGHTS>).reduce(
     (sum, key) => sum + breakdown[key] * CATEGORY_WEIGHTS[key],
     0,
