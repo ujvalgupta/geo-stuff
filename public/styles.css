@@ -1312,100 +1312,176 @@ input[type="url"]:focus {
    RESPONSIVE
    ═══════════════════════════════════════════════ */
 
+/* ── Bar chart baseline: tall enough for 16 items ── */
+.chart-wrap--bar { height: 480px; }
+
+/* ── Tablet (≤900px) ──────────────────────────── */
 @media (max-width: 900px) {
   .app-shell { width: calc(100vw - 40px); }
-  .charts-row { grid-template-columns: 1fr; }
-  .chart-wrap { max-width: 320px; }
-  .chart-wrap--bar { height: 280px; }
+
+  /* Stack charts vertically */
+  .charts-row { grid-template-columns: 1fr; gap: 12px; }
+  .chart-wrap { max-width: 360px; }
+  .chart-wrap--bar { height: 460px; }
+
+  /* 2-col stats */
+  .stat-row { grid-template-columns: repeat(2, 1fr); }
+  .stat-num { font-size: 1.9rem; }
 }
 
-@media (max-width: 700px) {
-  .app-shell { width: calc(100vw - 32px); padding: 40px 0 80px; }
+/* ── Large phone / small tablet (≤640px) ─────── */
+@media (max-width: 640px) {
+  .app-shell { width: calc(100vw - 32px); padding: 36px 0 72px; }
 
-  .stat-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .stat-num { font-size: 1.8rem; }
-
-  .checks-grid { grid-template-columns: 1fr; }
-
-  .score-badge { width: 92px; height: 92px; }
-  .score-badge::before { inset: 9px; }
-  .score-inner span { font-size: 1.5rem; }
-
-  #checks-panel { padding: var(--panel-pad-sm); }
-  .status-panel { padding: var(--panel-pad-sm); }
-  .form-panel { padding: var(--panel-pad-sm); }
-  .loading-panel { padding: var(--panel-pad-sm); }
+  /* Panels */
+  .form-panel,
+  .loading-panel,
+  .status-panel,
+  #checks-panel,
   #json-panel { padding: var(--panel-pad-sm); }
-}
-
-@media (max-width: 520px) {
-  .app-shell { width: calc(100vw - 24px); padding: 28px 0 64px; }
 
   /* Hero */
-  h1 { font-size: clamp(1.6rem, 7vw, 2rem); }
-  .lede { font-size: 0.9rem; }
-  .hero-tags { gap: 5px; }
-  .hero-tag { font-size: 0.67rem; padding: 4px 10px; }
+  h1 { font-size: clamp(1.65rem, 6vw, 2.2rem); }
+  .lede { font-size: 0.93rem; }
 
-  /* Form */
-  .form-panel { padding: 18px; }
-  .input-row { flex-direction: column; }
-  input[type="url"] { font-size: 16px; } /* prevents iOS zoom */
-  #submit-button { width: 100%; height: 50px; font-size: 0.9rem; }
+  /* Form — always stack on phones */
+  .input-row { flex-direction: column; gap: 8px; }
+  input[type="url"] { font-size: 16px; height: 52px; } /* 16px prevents iOS zoom */
+  #submit-button { width: 100%; height: 52px; font-size: 0.92rem; }
 
-  /* Score header */
-  .status-panel { padding: 18px; }
-  .status-header { flex-direction: column; gap: 16px; }
-  .score-badge { align-self: flex-start; }
-  #result-title { font-size: 1.45rem; }
+  /* Score header — stack score below title */
+  .status-header { flex-direction: column; gap: 14px; align-items: flex-start; }
+  .score-badge { width: 96px; height: 96px; }
+  .score-badge::before { inset: 9px; }
+  .score-inner span { font-size: 1.55rem; }
+  #result-title { font-size: 1.5rem; }
 
   /* Stats */
-  .stat-row { gap: 7px; }
-  .stat-num { font-size: 1.6rem; }
-  .stat-lbl { font-size: 0.63rem; }
+  .stat-num { font-size: 1.75rem; }
+  .stat-lbl { font-size: 0.64rem; }
 
   /* Charts */
-  .charts-row { gap: 10px; }
-  .chart-box { padding: 14px; }
+  .chart-box { padding: 16px; }
   .chart-wrap { max-width: 100%; }
-  .chart-wrap--bar { height: 240px; }
+  .chart-wrap--bar { height: 440px; }
 
   /* Checks */
-  #checks-panel { padding: 16px; }
-  .category-group { margin-bottom: 20px; }
+  .checks-grid { grid-template-columns: 1fr; }
+  .category-group { margin-bottom: 22px; }
   .check-card { padding: 14px 14px 14px 12px; }
+
+  /* Loading */
+  .loading-step { font-size: 0.9rem; }
+}
+
+/* ── Phone (≤480px) ───────────────────────────── */
+@media (max-width: 480px) {
+  .app-shell { width: calc(100vw - 20px); padding: 24px 0 60px; }
+
+  /* Hero */
+  h1 { font-size: clamp(1.5rem, 7.5vw, 1.9rem); }
+  .lede { font-size: 0.88rem; }
+  .hero-tag { font-size: 0.66rem; padding: 4px 10px; }
+
+  /* Panels */
+  .form-panel,
+  .loading-panel,
+  .status-panel,
+  #checks-panel,
+  #json-panel { padding: 16px; }
+
+  /* Score */
+  .score-badge { width: 88px; height: 88px; }
+  .score-inner span { font-size: 1.45rem; }
+  #result-title { font-size: 1.35rem; }
+
+  /* Stats */
+  .stat-pill { padding: 12px 14px; }
+  .stat-num { font-size: 1.55rem; }
+  .stat-lbl { font-size: 0.6rem; margin-bottom: 8px; }
+
+  /* Charts */
+  .chart-box { padding: 12px; }
+  .chart-wrap--bar { height: 420px; }
+
+  /* Checks */
+  #checks-panel { padding: 14px; }
+  .check-card { padding: 12px 12px 12px 10px; }
 
   /* Metrics */
   .signal-grid { grid-template-columns: 1fr; }
   .bot-chip-grid { grid-template-columns: repeat(2, 1fr); }
-  .cwv-row { grid-template-columns: 44px 1fr 80px; gap: 7px; }
-  .mrow { grid-template-columns: 90px 1fr; }
-  .mbar-wrap { gap: 6px; }
-  .mbar-label { width: 90px; font-size: 0.7rem; }
-  .og-item { grid-template-columns: 7px 90px 1fr; }
+  .cwv-row { grid-template-columns: 42px 1fr 76px; gap: 6px; }
+  .cwv-vals { min-width: 0; }
+  .mrow { grid-template-columns: 88px 1fr; }
+  .mbar-label { width: 80px; font-size: 0.69rem; }
+  .og-item { grid-template-columns: 7px 84px 1fr; }
+
+  /* ── Site Health table → card layout on mobile ── */
+  .page-row--head { display: none; }
+
+  .page-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    min-width: unset;
+    padding: 8px 10px;
+  }
+
+  /* Path fills full first line */
+  .page-row .page-path {
+    flex: 0 0 100%;
+    font-size: 0.73rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+
+  /* Badge cells sit inline on second line */
+  .page-row span:not(.page-path) {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.69rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: var(--r-pill);
+    border: 1px solid transparent;
+  }
+
+  .page-row span.pcell--pass { background: var(--pass-bg); border-color: var(--pass-bd); color: var(--pass); }
+  .page-row span.pcell--warn { background: var(--warn-bg); border-color: var(--warn-bd); color: var(--warn); }
+  .page-row span.pcell--fail { background: var(--fail-bg); border-color: var(--fail-bd); color: var(--fail); }
+
+  /* Prepend short labels to each badge */
+  .page-row:not(.page-row--head) span:nth-child(2)::before { content: "HTTP\00a0"; color: var(--muted); font-weight: 500; }
+  .page-row:not(.page-row--head) span:nth-child(3)::before { content: "Schema\00a0"; color: var(--muted); font-weight: 500; }
+  .page-row:not(.page-row--head) span:nth-child(4)::before { content: "Canon\00a0"; color: var(--muted); font-weight: 500; }
+  .page-row:not(.page-row--head) span:nth-child(5)::before { content: "Noindex\00a0"; color: var(--muted); font-weight: 500; }
 
   /* Loading */
-  .loading-panel { padding: 18px; }
-  .loading-step { font-size: 0.88rem; }
-  .lc-item { font-size: 0.66rem; padding: 4px 10px; }
+  .lc-item { font-size: 0.65rem; padding: 4px 9px; }
 
   /* JSON */
-  #json-panel { padding: 16px; }
-  .json-output { font-size: 0.72rem; }
+  .json-output { font-size: 0.7rem; padding: 14px; }
 }
 
+/* ── Small phone (≤360px) ─────────────────────── */
 @media (max-width: 360px) {
-  .app-shell { width: calc(100vw - 16px); }
-  .stat-row { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-  .stat-num { font-size: 1.45rem; }
-  .cwv-row { grid-template-columns: 40px 1fr 70px; gap: 5px; }
-  .cwv-vals { min-width: 0; }
-  .cwv-measured { font-size: 0.68rem; }
+  .app-shell { width: calc(100vw - 12px); }
+  .stat-num { font-size: 1.4rem; }
+  .cwv-row { grid-template-columns: 38px 1fr 68px; gap: 5px; }
+  .cwv-measured { font-size: 0.67rem; }
+  .cwv-rating { font-size: 0.57rem; }
+  .check-card { padding: 10px 10px 10px 9px; }
 }
 
-/* Touch devices — bigger tap targets */
+/* ── Touch devices — bigger tap targets ─────── */
 @media (hover: none) {
-  .details-toggle { min-height: 44px; }
+  .details-toggle { min-height: 44px; padding: 10px 0; }
   #submit-button  { min-height: 50px; }
+  .check-card { transition: none; }
   .check-card:hover { transform: none; box-shadow: none; }
 }
