@@ -4,10 +4,32 @@ import { fetchText } from "../utils/http.js";
 const BROWSER_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36";
 
-const USER_AGENTS = [
-  "GPTBot/1.0",
-  "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-  "PerplexityBot/1.0",
+const BOT_USER_AGENTS: Array<{ name: string; ua: string }> = [
+  { name: "GPTBot", ua: "GPTBot/1.0" },
+  {
+    name: "ClaudeBot",
+    ua: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ClaudeBot/0.1; +claude.ai/bot)",
+  },
+  {
+    name: "PerplexityBot",
+    ua: "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)",
+  },
+  {
+    name: "Googlebot",
+    ua: "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+  },
+  {
+    name: "Bingbot",
+    ua: "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
+  },
+  {
+    name: "Applebot",
+    ua: "Mozilla/5.0 (compatible; Applebot/0.1; +http://www.apple.com/go/applebot)",
+  },
+  {
+    name: "Meta-ExternalAgent",
+    ua: "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/bot/)",
+  },
 ];
 
 function isBlocked(snapshot: Awaited<ReturnType<typeof fetchText>>): boolean {
@@ -23,70 +45,59 @@ function isBlocked(snapshot: Awaited<ReturnType<typeof fetchText>>): boolean {
   );
 }
 
-function normalizeHtml(html: string | null): string {
-  return (html ?? "").replace(/\s+/g, " ").trim();
+function wordTokens(text: string): Set<string> {
+  return new Set(
+    text
+      .toLowerCase()
+      .replace(/<[^>]+>/g, " ")
+      .split(/\W+/)
+      .filter((t) => t.length > 3),
+  );
 }
 
-function calculateSimilarityScore(left: string, right: string): number {
-  if (!left && !right) {
-    return 1;
-  }
-
-  const leftTokens = new Set(left.toLowerCase().split(/\W+/).filter(Boolean));
-  const rightTokens = new Set(right.toLowerCase().split(/\W+/).filter(Boolean));
-  const union = new Set([...leftTokens, ...rightTokens]);
-  if (union.size === 0) {
-    return 1;
-  }
-
-  let intersectionCount = 0;
-  for (const token of leftTokens) {
-    if (rightTokens.has(token)) {
-      intersectionCount += 1;
-    }
-  }
-
-  return Number((intersectionCount / union.size).toFixed(2));
+function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 && b.size === 0) return 1;
+  const intersection = [...a].filter((t) => b.has(t)).length;
+  const union = new Set([...a, ...b]).size;
+  return union === 0 ? 1 : Number((intersection / union).toFixed(2));
 }
 
 export async function runBotAccessSimulationCheck(
   context: CheckContext,
 ): Promise<CheckResult> {
-  const browserSnapshot = await fetchText(context.normalizedUrl.toString(), {
-    headers: {
-      "user-agent": BROWSER_USER_AGENT,
-    },
+  const url = context.normalizedUrl.toString();
+
+  const browserSnapshot = await fetchText(url, {
+    headers: { "user-agent": BROWSER_USER_AGENT },
   });
-  const browserHtml = normalizeHtml(browserSnapshot.body);
+
+  const browserTokens = wordTokens(browserSnapshot.body ?? "");
   const browserResponseLength = browserSnapshot.body?.length ?? 0;
   const results: BotSimulationResult[] = [];
 
-  for (const userAgent of USER_AGENTS) {
-    const snapshot = await fetchText(context.normalizedUrl.toString(), {
-      headers: {
-        "user-agent": userAgent,
-      },
-    });
+  for (const { name, ua } of BOT_USER_AGENTS) {
+    const snapshot = await fetchText(url, { headers: { "user-agent": ua } });
 
     const blocked = snapshot.fetchError ? true : isBlocked(snapshot);
-    const accessible = !snapshot.fetchError && !blocked && (snapshot.statusCode ?? 500) < 400;
-    const normalizedBotHtml = normalizeHtml(snapshot.body);
+    const accessible =
+      !snapshot.fetchError && !blocked && (snapshot.statusCode ?? 500) < 400;
+
     const responseLength = snapshot.body?.length ?? 0;
     const responseLengthDelta = responseLength - browserResponseLength;
-    const responseLengthDeltaPercent = browserResponseLength === 0
-      ? responseLength === 0
-        ? 0
-        : 100
-      : Number(((Math.abs(responseLengthDelta) / browserResponseLength) * 100).toFixed(2));
-    const differentStatusCode =
-      snapshot.statusCode !== browserSnapshot.statusCode;
-    const htmlDifferent = normalizedBotHtml !== browserHtml;
-    const similarityScore = calculateSimilarityScore(browserHtml, normalizedBotHtml);
-    const differentFromBrowser =
-      differentStatusCode || responseLengthDeltaPercent >= 20 || htmlDifferent;
+    const responseLengthDeltaPercent =
+      browserResponseLength === 0
+        ? responseLength === 0 ? 0 : 100
+        : Number(((Math.abs(responseLengthDelta) / browserResponseLength) * 100).toFixed(2));
+
+    const differentStatusCode = snapshot.statusCode !== browserSnapshot.statusCode;
+    const botTokens = wordTokens(snapshot.body ?? "");
+    const similarityScore = jaccardSimilarity(browserTokens, botTokens);
+    const contentDiverged = similarityScore < 0.6 && responseLength > 200;
+    const differentFromBrowser = differentStatusCode || contentDiverged;
 
     results.push({
-      userAgent,
+      botName: name,
+      userAgent: ua,
       statusCode: snapshot.statusCode,
       accessible,
       blocked,
@@ -94,57 +105,57 @@ export async function runBotAccessSimulationCheck(
       reason: snapshot.fetchError
         ? snapshot.fetchError
         : blocked
-          ? `Possible bot blocking with HTTP ${snapshot.statusCode}`
+          ? `Blocked — HTTP ${snapshot.statusCode}`
           : differentFromBrowser
-            ? "Bot user agent received a materially different response than the browser baseline"
-          : "Bot user agent received an accessible response",
+            ? `Divergent response (similarity: ${similarityScore})`
+            : "Accessible — matches browser baseline",
       comparisonToBrowser: {
         differentStatusCode,
         responseLengthDelta,
         responseLengthDeltaPercent,
-        htmlDifferent,
         similarityScore,
       },
     });
   }
 
-  const blockedResults = results.filter((item) => !item.accessible);
-  const divergentResults = results.filter((item) => {
-    const comparison = item.comparisonToBrowser;
-    return comparison
-      ? comparison.differentStatusCode ||
-          comparison.responseLengthDeltaPercent >= 20 ||
-          comparison.htmlDifferent
-      : false;
-  });
+  const blockedResults = results.filter((r) => !r.accessible);
+  const divergentResults = results.filter(
+    (r) =>
+      r.accessible &&
+      r.comparisonToBrowser &&
+      (r.comparisonToBrowser.differentStatusCode || r.comparisonToBrowser.similarityScore < 0.6),
+  );
 
+  const blockedNames = blockedResults.map((r) => r.botName);
+  const divergentNames = divergentResults.map((r) => r.botName);
   const status =
     blockedResults.length === results.length
       ? "FAIL"
       : blockedResults.length > 0 || divergentResults.length > 0
         ? "WARNING"
-      : "PASS";
+        : "PASS";
 
   return {
     status,
     reason:
       blockedResults.length === results.length
-        ? "All simulated crawler user agents appear blocked or degraded"
+        ? `All ${results.length} AI crawlers appear blocked`
         : blockedResults.length > 0
-          ? "Some crawler user agents appear blocked or degraded"
+          ? `Blocked for: ${blockedNames.join(", ")}`
           : divergentResults.length > 0
-            ? "Bots received responses that differ from the normal browser baseline"
-            : "All simulated crawler user agents matched the browser baseline closely",
+            ? `Divergent response for: ${divergentNames.join(", ")}`
+            : `All ${results.length} AI crawlers received an accessible response`,
     metadata: {
       normalizedScore: status === "PASS" ? 1 : status === "WARNING" ? 0.5 : 0,
       browserBaseline: {
-        userAgent: BROWSER_USER_AGENT,
         statusCode: browserSnapshot.statusCode,
         responseLength: browserResponseLength,
         finalUrl: browserSnapshot.finalUrl,
       },
+      botsChecked: results.length,
+      blockedBots: blockedNames,
+      divergentBots: divergentNames,
       simulations: results,
-      divergentBots: divergentResults.map((item) => item.userAgent),
     },
   };
 }

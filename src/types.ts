@@ -4,8 +4,9 @@ export type CrawlabilityClassification = "Excellent" | "Good" | "Risky" | "Broke
 export interface ScoreBreakdown {
   fetchability: number;
   botAccess: number;
+  crawlSignals: number;
+  structuredData: number;
   rendering: number;
-  parsing: number;
   contentQuality: number;
 }
 
@@ -25,13 +26,19 @@ export interface PageSnapshot {
   fetchError?: string;
 }
 
+export interface RedirectHop {
+  url: string;
+  statusCode: number;
+}
+
 export interface CheckContext {
   inputUrl: string;
   normalizedUrl: URL;
-  baseSnapshot?: PageSnapshot;
+  baseSnapshot?: PageSnapshot & { durationMs: number; redirectChain?: RedirectHop[] };
 }
 
 export interface BotSimulationResult {
+  botName: string;
   userAgent: string;
   statusCode: number | null;
   accessible: boolean;
@@ -42,7 +49,6 @@ export interface BotSimulationResult {
     differentStatusCode: boolean;
     responseLengthDelta: number;
     responseLengthDeltaPercent: number;
-    htmlDifferent: boolean;
     similarityScore: number;
   };
 }
@@ -58,9 +64,14 @@ export interface CrawlabilityReport {
     fetchability: CheckResult;
     robotsTxt: CheckResult;
     botAccessSimulation: CheckResult;
+    metaRobots: CheckResult;
+    canonical: CheckResult;
+    sitemap: CheckResult;
+    structuredData: CheckResult;
     javascriptRendering: CheckResult;
-    htmlParsability: CheckResult;
     contentExtraction: CheckResult;
+    openGraph: CheckResult;
+    contentFreshness: CheckResult;
   };
   summary: string;
 }

@@ -18,38 +18,28 @@ export function parseRobotsForUserAgent(
 
   for (const rawLine of lines) {
     const line = rawLine.replace(/#.*$/, "").trim();
-    if (!line) {
-      continue;
-    }
+    if (!line) continue;
 
     const separatorIndex = line.indexOf(":");
-    if (separatorIndex === -1) {
-      continue;
-    }
+    if (separatorIndex === -1) continue;
 
     const key = line.slice(0, separatorIndex).trim().toLowerCase();
     const value = line.slice(separatorIndex + 1).trim();
-    if (!value) {
-      continue;
-    }
+    if (!value) continue;
 
     if (key === "user-agent") {
       const normalized = value.toLowerCase();
       applies =
         normalized === "*" ||
-        requestedUserAgent.toLowerCase().includes(normalized);
+        requestedUserAgent.toLowerCase().includes(normalized) ||
+        normalized.includes(requestedUserAgent.toLowerCase());
       continue;
     }
 
-    if (!applies) {
-      continue;
-    }
+    if (!applies) continue;
 
     if (key === "allow" || key === "disallow") {
-      rules.push({
-        pattern: value,
-        allow: key === "allow",
-      });
+      rules.push({ pattern: value, allow: key === "allow" });
     }
   }
 
@@ -74,12 +64,23 @@ export function evaluateRobotsAccess(
     }
   }
 
-  if (!bestMatch) {
-    return { allowed: true };
-  }
+  if (!bestMatch) return { allowed: true };
 
   return {
     allowed: bestMatch.allow,
     matchedRule: `${bestMatch.allow ? "Allow" : "Disallow"}: ${bestMatch.pattern}`,
   };
+}
+
+export function parseCrawlDelay(content: string): number | null {
+  const lines = content.split(/\r?\n/);
+  for (const rawLine of lines) {
+    const line = rawLine.replace(/#.*$/, "").trim().toLowerCase();
+    if (line.startsWith("crawl-delay:")) {
+      const value = line.slice("crawl-delay:".length).trim();
+      const parsed = parseFloat(value);
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
+  }
+  return null;
 }

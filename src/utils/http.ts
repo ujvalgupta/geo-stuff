@@ -1,4 +1,4 @@
-import type { PageSnapshot } from "../types.js";
+import type { PageSnapshot, RedirectHop } from "../types.js";
 
 export async function fetchText(
   url: string,
@@ -44,6 +44,51 @@ export async function fetchText(
   }
 }
 
+export async function fetchWithRedirectChain(
+  url: string,
+): Promise<{ chain: RedirectHop[]; finalUrl: string; durationMs: number; fetchError?: string }> {
+  const startedAt = Date.now();
+  const chain: RedirectHop[] = [];
+  let currentUrl = url;
+  const maxHops = 10;
+
+  try {
+    for (let hop = 0; hop < maxHops; hop++) {
+      const response = await fetch(currentUrl, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(10000),
+      });
+
+      chain.push({ url: currentUrl, statusCode: response.status });
+
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location");
+        if (!location) break;
+        currentUrl = new URL(location, currentUrl).toString();
+      } else {
+        break;
+      }
+    }
+
+    return { chain, finalUrl: currentUrl, durationMs: Date.now() - startedAt };
+  } catch (error) {
+    return {
+      chain,
+      finalUrl: currentUrl,
+      durationMs: Date.now() - startedAt,
+      fetchError: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 export function getOriginRobotsUrl(url: URL): string {
   return new URL("/robots.txt", url.origin).toString();
+}
+
+export function getOriginSitemapUrl(url: URL): string {
+  return new URL("/sitemap.xml", url.origin).toString();
+}
+
+export function getOriginSitemapIndexUrl(url: URL): string {
+  return new URL("/sitemap_index.xml", url.origin).toString();
 }

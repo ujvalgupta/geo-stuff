@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Crawlability Checker</title>
+    <title>GEO & AI Crawlability Audit</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -14,12 +14,20 @@
     <main class="app-shell">
 
       <section class="hero">
-        <p class="eyebrow">AI Crawlability Checker</p>
-        <h1>Can LLM crawlers actually use your page?</h1>
+        <div class="eyebrow"><span class="eyebrow-dot"></span>GEO &amp; AI Crawlability Audit</div>
+        <h1>Can AI engines find, parse &amp; cite your page?</h1>
         <p class="lede">
-          Analyze fetchability, bot access, rendering dependency, parsing, and
-          content quality — from a single URL.
+          GEO goes beyond traditional SEO. Analyze structured data, bot access,
+          canonical signals, content freshness, and rendering — across 7 AI crawlers.
         </p>
+        <div class="hero-tags">
+          <span class="hero-tag">Schema.org</span>
+          <span class="hero-tag">7 AI Bots</span>
+          <span class="hero-tag">Canonical</span>
+          <span class="hero-tag">Meta Robots</span>
+          <span class="hero-tag">Sitemap</span>
+          <span class="hero-tag">Freshness</span>
+        </div>
       </section>
 
       <section class="panel form-panel">
@@ -30,21 +38,41 @@
               id="url-input"
               name="url"
               type="url"
-              placeholder="https://example.com"
+              placeholder="https://example.com/your-page"
               autocomplete="off"
               spellcheck="false"
               required
             />
-            <button id="submit-button" type="submit">Analyze</button>
+            <button id="submit-button" type="submit">
+              <span class="btn-text">Analyze</span>
+              <span class="btn-spinner hidden"></span>
+            </button>
           </div>
-          <p class="hint">Sends a <code>POST /analyze</code> request to the backend.</p>
         </form>
+      </section>
+
+      <section id="loading-panel" class="panel loading-panel hidden">
+        <div class="loading-inner">
+          <div class="loading-ring"></div>
+          <div class="loading-text-wrap">
+            <p class="loading-step" id="loading-step">Fetching page…</p>
+            <p class="loading-sub">Running 11 checks across 6 GEO categories</p>
+          </div>
+        </div>
+        <div class="loading-checks">
+          <span class="lc-item" id="lc-fetch">Fetchability</span>
+          <span class="lc-item" id="lc-bots">Bot Access</span>
+          <span class="lc-item" id="lc-crawl">Crawl Signals</span>
+          <span class="lc-item" id="lc-schema">Structured Data</span>
+          <span class="lc-item" id="lc-render">JS Rendering</span>
+          <span class="lc-item" id="lc-content">Content Quality</span>
+        </div>
       </section>
 
       <section id="status-panel" class="panel status-panel hidden">
         <div class="status-header">
           <div class="status-header-left">
-            <p class="eyebrow">Result</p>
+            <p class="eyebrow"><span class="eyebrow-dot"></span>Result</p>
             <h2 id="result-title">—</h2>
             <p id="result-summary" class="result-summary"></p>
           </div>
@@ -55,37 +83,54 @@
             </div>
           </div>
         </div>
+        <div class="stat-row" id="stat-row"></div>
         <div class="charts-row">
           <div class="chart-box">
-            <p class="chart-label">Coverage Radar</p>
+            <p class="chart-label">GEO Category Scores</p>
             <div class="chart-wrap"><canvas id="radar-chart"></canvas></div>
-            <div class="radar-scale">
-              <span class="rs-item"><span class="rs-dot rs-dot--25"></span>25</span>
-              <span class="rs-item"><span class="rs-dot rs-dot--50"></span>50</span>
-              <span class="rs-item"><span class="rs-dot rs-dot--75"></span>75</span>
-              <span class="rs-item"><span class="rs-dot rs-dot--100"></span>100</span>
-            </div>
           </div>
           <div class="chart-box">
-            <p class="chart-label">Module Scores</p>
+            <p class="chart-label">Check Results</p>
             <div class="chart-wrap chart-wrap--bar"><canvas id="bar-chart"></canvas></div>
           </div>
         </div>
-
-        <div class="stat-row" id="stat-row"></div>
       </section>
 
       <section id="checks-panel" class="panel hidden">
         <div class="panel-header">
-          <p class="eyebrow">Checks</p>
+          <p class="eyebrow"><span class="eyebrow-dot"></span>Checks</p>
           <h2>Module breakdown</h2>
+          <p class="panel-sub">Click any card to see details</p>
         </div>
-        <div id="checks-grid" class="checks-grid"></div>
+        <div class="category-group">
+          <h3 class="category-label">Fetchability <span class="cat-weight">12%</span></h3>
+          <div class="checks-grid" id="grid-fetchability"></div>
+        </div>
+        <div class="category-group">
+          <h3 class="category-label">Bot Access <span class="cat-weight">18%</span></h3>
+          <div class="checks-grid" id="grid-botaccess"></div>
+        </div>
+        <div class="category-group">
+          <h3 class="category-label">Crawl Signals <span class="cat-weight">20%</span></h3>
+          <div class="checks-grid" id="grid-crawlsignals"></div>
+        </div>
+        <div class="category-group">
+          <h3 class="category-label">Structured Data <span class="cat-weight">25%</span></h3>
+          <div class="checks-grid" id="grid-structureddata"></div>
+        </div>
+        <div class="category-group">
+          <h3 class="category-label">JS Rendering <span class="cat-weight">12%</span></h3>
+          <div class="checks-grid" id="grid-rendering"></div>
+        </div>
+        <div class="category-group">
+          <h3 class="category-label">Content Quality <span class="cat-weight">13%</span></h3>
+          <div class="checks-grid" id="grid-content"></div>
+        </div>
       </section>
 
       <section id="json-panel" class="panel hidden">
         <div class="panel-header">
-          <p class="eyebrow">Raw Output</p>
+          <p class="eyebrow"><span class="eyebrow-dot"></span>Raw Output</p>
           <h2>Full report JSON</h2>
         </div>
         <pre id="json-output" class="json-output"></pre>
@@ -103,6 +148,13 @@
           <span class="status-pill"></span>
         </div>
         <p class="check-reason"></p>
+        <button class="details-toggle" type="button" aria-expanded="false">
+          <span class="toggle-label">Details</span>
+          <span class="toggle-chevron">›</span>
+        </button>
+        <div class="details-body" hidden>
+          <dl class="details-list"></dl>
+        </div>
       </article>
     </template>
 

@@ -1,12 +1,10 @@
 import type { CheckContext, CheckResult } from "../types.js";
-import { fetchText } from "../utils/http.js";
+import { fetchText, fetchWithRedirectChain } from "../utils/http.js";
 import { dnsLookup, tlsHandshake } from "../utils/network.js";
-
-const SLOW_RESPONSE_THRESHOLD_MS = 3000;
 
 export async function runFetchabilityCheck(
   context: CheckContext,
-): Promise<{ result: CheckResult; snapshot: Awaited<ReturnType<typeof fetchText>> }> {
+): Promise<{ result: CheckResult; snapshot: Awaited<ReturnType<typeof fetchText>> & { redirectChain?: import("../types.js").RedirectHop[] } }> {
   const hostname = context.normalizedUrl.hostname;
   const protocol = context.normalizedUrl.protocol;
 
@@ -22,37 +20,51 @@ export async function runFetchabilityCheck(
   const tlsResult =
     protocol === "https:" ? await tlsHandshake(hostname) : { ok: true as const };
 
-  const snapshot = await fetchText(context.normalizedUrl.toString());
+  // Run main fetch and redirect chain analysis in parallel
+  const [snapshot, redirectResult] = await Promise.all([
+    fetchText(context.normalizedUrl.toString()),
+    fetchWithRedirectChain(context.normalizedUrl.toString()),
+  ]);
+
+  const redirectChain = redirectResult.chain;
+  const redirectCount = Math.max(0, redirectChain.length - 1);
+  const has302InChain = redirectChain.some((h) => h.statusCode === 302);
 
   const isHttpFailure =
     snapshot.fetchError ||
     (snapshot.statusCode !== null && snapshot.statusCode >= 400);
-  const isSlow = snapshot.durationMs >= SLOW_RESPONSE_THRESHOLD_MS;
 
-  const status = !dnsResolved || !tlsResult.ok || isHttpFailure
-    ? "FAIL"
-    : isSlow
-      ? "WARNING"
-      : "PASS";
+  let status: "PASS" | "WARNING" | "FAIL";
+  let reason: string;
 
-  const reason = !dnsResolved
-    ? `DNS lookup failed for ${hostname}`
-    : !tlsResult.ok
-      ? `TLS handshake failed for ${hostname}`
-      : snapshot.fetchError
-        ? `HTTP fetch failed: ${snapshot.fetchError}`
-        : snapshot.statusCode !== null && snapshot.statusCode >= 400
-          ? `Origin returned HTTP ${snapshot.statusCode}`
-          : isSlow
-            ? `DNS, TLS, and HTTP fetch succeeded, but the response was slow (${snapshot.durationMs} ms)`
-            : "DNS, TLS, and HTTP fetch succeeded";
+  if (!dnsResolved || !tlsResult.ok || isHttpFailure) {
+    status = "FAIL";
+    reason = !dnsResolved
+      ? `DNS lookup failed for ${hostname}`
+      : !tlsResult.ok
+        ? `TLS handshake failed for ${hostname}`
+        : snapshot.fetchError
+          ? `HTTP fetch failed: ${snapshot.fetchError}`
+          : `Origin returned HTTP ${snapshot.statusCode}`;
+  } else if (redirectCount > 2) {
+    status = "WARNING";
+    reason = `${redirectCount} redirect hops before final URL — bots may drop off in long chains`;
+  } else if (has302InChain) {
+    status = "WARNING";
+    reason = `302 temporary redirect in chain — link signals may not pass to final URL`;
+  } else {
+    status = "PASS";
+    reason = redirectCount > 0
+      ? `Fetched successfully via ${redirectCount} redirect${redirectCount > 1 ? "s" : ""}`
+      : "DNS, TLS, and HTTP fetch succeeded";
+  }
 
   return {
     result: {
       status,
       reason,
       metadata: {
-        normalizedScore: status === "PASS" ? 1 : status === "WARNING" ? 0.5 : 0,
+        normalizedScore: status === "PASS" ? 1 : status === "WARNING" ? 0.7 : 0,
         hostname,
         dnsResolved,
         dnsError,
@@ -63,9 +75,11 @@ export async function runFetchabilityCheck(
         statusCode: snapshot.statusCode,
         statusText: snapshot.statusText,
         durationMs: snapshot.durationMs,
-        slowThresholdMs: SLOW_RESPONSE_THRESHOLD_MS,
+        redirectCount,
+        redirectChain,
+        has302InChain,
       },
     },
-    snapshot,
+    snapshot: { ...snapshot, redirectChain },
   };
 }
