@@ -4,48 +4,75 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AI Crawlability Checker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   </head>
   <body>
     <main class="app-shell">
+
       <section class="hero">
         <p class="eyebrow">AI Crawlability Checker</p>
-        <h1>Check whether LLM crawlers can actually use a page.</h1>
+        <h1>Can LLM crawlers actually use your page?</h1>
         <p class="lede">
-          Analyze fetchability, bot access, rendering dependency, parsing, and content quality from one URL.
+          Analyze fetchability, bot access, rendering dependency, parsing, and
+          content quality — from a single URL.
         </p>
       </section>
 
       <section class="panel form-panel">
         <form id="analyze-form" class="analyze-form">
-          <label for="url-input">URL</label>
+          <label for="url-input">URL to analyze</label>
           <div class="input-row">
             <input
               id="url-input"
               name="url"
               type="url"
               placeholder="https://example.com"
+              autocomplete="off"
+              spellcheck="false"
               required
             />
             <button id="submit-button" type="submit">Analyze</button>
           </div>
-          <p class="hint">The API uses <code>POST /analyze</code> behind this form.</p>
+          <p class="hint">Sends a <code>POST /analyze</code> request to the backend.</p>
         </form>
       </section>
 
       <section id="status-panel" class="panel status-panel hidden">
         <div class="status-header">
-          <div>
+          <div class="status-header-left">
             <p class="eyebrow">Result</p>
-            <h2 id="result-title">Waiting</h2>
+            <h2 id="result-title">—</h2>
+            <p id="result-summary" class="result-summary"></p>
           </div>
-          <div class="score-badge">
-            <span id="score-value">0</span>
-            <small>/100</small>
+          <div class="score-badge" id="score-badge">
+            <div class="score-inner">
+              <span id="score-value">0</span>
+              <small>/100</small>
+            </div>
           </div>
         </div>
-        <p id="result-summary" class="result-summary"></p>
-        <div id="breakdown-grid" class="breakdown-grid"></div>
+        <div class="charts-row">
+          <div class="chart-box">
+            <p class="chart-label">Coverage Radar</p>
+            <div class="chart-wrap"><canvas id="radar-chart"></canvas></div>
+            <div class="radar-scale">
+              <span class="rs-item"><span class="rs-dot rs-dot--25"></span>25</span>
+              <span class="rs-item"><span class="rs-dot rs-dot--50"></span>50</span>
+              <span class="rs-item"><span class="rs-dot rs-dot--75"></span>75</span>
+              <span class="rs-item"><span class="rs-dot rs-dot--100"></span>100</span>
+            </div>
+          </div>
+          <div class="chart-box">
+            <p class="chart-label">Module Scores</p>
+            <div class="chart-wrap chart-wrap--bar"><canvas id="bar-chart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="stat-row" id="stat-row"></div>
       </section>
 
       <section id="checks-panel" class="panel hidden">
@@ -63,19 +90,16 @@
         </div>
         <pre id="json-output" class="json-output"></pre>
       </section>
-    </main>
 
-    <template id="metric-card-template">
-      <article class="metric-card">
-        <p class="metric-label"></p>
-        <p class="metric-value"></p>
-      </article>
-    </template>
+    </main>
 
     <template id="check-card-template">
       <article class="check-card">
         <div class="check-card-header">
-          <h3 class="check-title"></h3>
+          <div class="check-title-group">
+            <span class="check-icon"></span>
+            <h3 class="check-title"></h3>
+          </div>
           <span class="status-pill"></span>
         </div>
         <p class="check-reason"></p>
@@ -84,4 +108,4 @@
 
     <script type="module" src="/app.js"></script>
   </body>
-  </html>
+</html>
